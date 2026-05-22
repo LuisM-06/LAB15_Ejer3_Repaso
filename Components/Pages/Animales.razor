@@ -1,0 +1,235 @@
+﻿@page "/animales"
+@rendermode InteractiveServer
+
+@using LAB15_Ejer3_Repaso.Models
+@using LAB15_Ejer3_Repaso.Services
+@inject JsonService jsonService
+
+<h3>Registro de Animales del Zoológico</h3>
+
+<div>
+    <label>Tipo de Animal:</label>
+    <select @bind="tipoAnimal">
+        <option value="">Seleccione</option>
+        <option value="Ave">Ave</option>
+        <option value="Serpiente">Serpiente</option>
+    </select>
+</div>
+
+<br />
+
+<div>
+    <label>Nombre Propio:</label>
+    <input @bind="nombrePropio" />
+</div>
+
+<div>
+    <label>Especie:</label>
+    <input @bind="especie" />
+</div>
+
+<div>
+    <label>Tipo de Alimentación:</label>
+    <input @bind="tipoAlimentacion" />
+</div>
+
+<div>
+    <label>Tiempo máximo de vida:</label>
+    <input type="number" @bind="tiempoMaximoVida" />
+</div>
+
+@if (tipoAnimal == "Ave")
+{
+    <h4>Datos del Ave</h4>
+
+    <div>
+        <label>¿Vuela?</label>
+        <input type="checkbox" @bind="vuela" />
+    </div>
+
+    <div>
+        <label>Período de incubación:</label>
+        <input type="number" @bind="periodoIncubacion" />
+    </div>
+}
+
+@if (tipoAnimal == "Serpiente")
+{
+    <h4>Datos de la Serpiente</h4>
+
+    <div>
+        <label>¿Es venenosa?</label>
+        <input type="checkbox" @bind="esVenenosa" />
+    </div>
+
+    <div>
+        <label>Longitud máxima:</label>
+        <input type="number" step="0.01" @bind="longitudMaxima" />
+    </div>
+}
+
+<br />
+
+<button @onclick="GuardarAnimal">Guardar Animal</button>
+
+<hr />
+
+<h3>Listado de Animales Ingresados</h3>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Nombre</th>
+            <th>Especie</th>
+            <th>Alimentación</th>
+            <th>Tiempo máximo de vida</th>
+            <th>Vuela</th>
+            <th>Incubación</th>
+            <th>Venenosa</th>
+            <th>Longitud máxima</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var animal in listaAnimales)
+        {
+            <tr>
+                <td>@animal.TipoAnimal</td>
+                <td>@animal.NombrePropio</td>
+                <td>@animal.Especie</td>
+                <td>@animal.TipoAlimentacion</td>
+                <td>@animal.TiempoMaximoVida</td>
+
+                <td>
+                    @if (animal.TipoAnimal == "Ave")
+                    {
+                        @(animal.Vuela ? "Sí" : "No")
+                    }
+                    else
+                    {
+                        @("-")
+                    }
+                </td>
+
+                <td>
+                    @if (animal.TipoAnimal == "Ave")
+                    {
+                        @animal.PeriodoIncubacion
+                    }
+                    else
+                    {
+                        @("-")
+                    }
+                </td>
+
+                <td>
+                    @if (animal.TipoAnimal == "Serpiente")
+                    {
+                        @(animal.EsVenenosa ? "Sí" : "No")
+                    }
+                    else
+                    {
+                        @("-")
+                    }
+                </td>
+
+                <td>
+                    @if (animal.TipoAnimal == "Serpiente")
+                    {
+                        @animal.LongitudMaxima
+                    }
+                    else
+                    {
+                        @("-")
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    string ruta = "animales.json";
+
+    List<AnimalRegistro> listaAnimales = new List<AnimalRegistro>();
+
+    string tipoAnimal = string.Empty;
+    string nombrePropio = string.Empty;
+    string especie = string.Empty;
+    string tipoAlimentacion = string.Empty;
+    int tiempoMaximoVida;
+
+    bool vuela;
+    int periodoIncubacion;
+
+    bool esVenenosa;
+    double longitudMaxima;
+
+    protected override void OnInitialized()
+    {
+        listaAnimales = jsonService.Leer<AnimalRegistro>(ruta);
+    }
+
+    void GuardarAnimal()
+    {
+        AnimalRegistro nuevoAnimal = new AnimalRegistro();
+
+        nuevoAnimal.TipoAnimal = tipoAnimal;
+        nuevoAnimal.NombrePropio = nombrePropio;
+        nuevoAnimal.Especie = especie;
+        nuevoAnimal.TipoAlimentacion = tipoAlimentacion;
+        nuevoAnimal.TiempoMaximoVida = tiempoMaximoVida;
+
+        if (tipoAnimal == "Ave")
+        {
+            Ave ave = new Ave();
+
+            ave.NombrePropio = nombrePropio;
+            ave.Especie = especie;
+            ave.TipoAlimentacion = tipoAlimentacion;
+            ave.TiempoMaximoVida = tiempoMaximoVida;
+            ave.Vuela = vuela;
+            ave.PeriodoIncubacion = periodoIncubacion;
+
+            nuevoAnimal.Vuela = ave.Vuela;
+            nuevoAnimal.PeriodoIncubacion = ave.PeriodoIncubacion;
+        }
+
+        if (tipoAnimal == "Serpiente")
+        {
+            Serpiente serpiente = new Serpiente();
+
+            serpiente.NombrePropio = nombrePropio;
+            serpiente.Especie = especie;
+            serpiente.TipoAlimentacion = tipoAlimentacion;
+            serpiente.TiempoMaximoVida = tiempoMaximoVida;
+            serpiente.EsVenenosa = esVenenosa;
+            serpiente.LongitudMaxima = longitudMaxima;
+
+            nuevoAnimal.EsVenenosa = serpiente.EsVenenosa;
+            nuevoAnimal.LongitudMaxima = serpiente.LongitudMaxima;
+        }
+
+        listaAnimales.Add(nuevoAnimal);
+
+        jsonService.Guardar(ruta, listaAnimales);
+
+        LimpiarCampos();
+    }
+
+    void LimpiarCampos()
+    {
+        tipoAnimal = string.Empty;
+        nombrePropio = string.Empty;
+        especie = string.Empty;
+        tipoAlimentacion = string.Empty;
+        tiempoMaximoVida = 0;
+
+        vuela = false;
+        periodoIncubacion = 0;
+
+        esVenenosa = false;
+        longitudMaxima = 0;
+    }
+}
